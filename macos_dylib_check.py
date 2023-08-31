@@ -73,10 +73,10 @@ if __name__ == '__main__':
 	retval = 0
 	for dylib in read_libraries(sys.argv[1]):
 		if dylib not in ALLOWED_LIBRARIES:
-			print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
+			print(f'{dylib} is not in ALLOWED_LIBRARIES!')
 			retval = 1
 	for flag in read_flags(sys.argv[1]):
 		if flag not in ALLOWED_DYLOAD_FLAGS:
-			print('{} is not in ALLOWED_DYLOAD_FLAGS!'.format(flag))
+			print(f'{flag} is not in ALLOWED_DYLOAD_FLAGS!')
 			retval = 1
 	sys.exit(retval)
