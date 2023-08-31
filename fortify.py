@@ -22,8 +22,7 @@ def objdump(args):
 dy_syms = []
 
 for line in objdump('-T').splitlines():
-    match = re.search(r'__[a-z]*_chk', line)
-    if match:
+    if match := re.search(r'__[a-z]*_chk', line):
         # we'll account for stack_chk_fail separately 
         if '__stack_chk' in match.group(0):
             continue
@@ -35,12 +34,14 @@ stack_chk_fail = 0
 
 for line in objdump('-d').splitlines():
     
-    _chk = [sym for sym in dy_syms if (sym+'@plt' in line )]
-    if _chk:
+    if _chk := [sym for sym in dy_syms if f'{sym}@plt' in line]:
         counts[_chk[0]] += 1
 
-    non_chk = [sym.strip('_chk') for sym in dy_syms if ('<' + sym.strip('_chk') + '@plt' in line)]
-    if non_chk:
+    if non_chk := [
+        sym.strip('_chk')
+        for sym in dy_syms
+        if ('<' + sym.strip('_chk') + '@plt' in line)
+    ]:
         counts[non_chk[0]] += 1
 
     if '__stack_chk_fail' in line:
@@ -62,4 +63,4 @@ for sym in dy_syms:
 print('{:10}| {:7} | {:4} | {:10} |'.format('Symbol', 'non _chk', '_chk', '% replaced'))
 print('\n'.join('{:10}: {:8} | {:4} | {:9}% |'.format(a,b,c,d) for (a,b,c,d) in result))
 print()
-print('{} calls to __stack_chk_fail()'.format(stack_chk_fail))
+print(f'{stack_chk_fail} calls to __stack_chk_fail()')

@@ -18,10 +18,10 @@ from git import Repo
 from typing import List
 
 def filename(lib: str, version: str) -> str:
-	return '{}-{}.tar.gz'.format(lib, version)
+	return f'{lib}-{version}.tar.gz'
 
 def download(lib: str, filename: str):
-	url = 'https://opensource.apple.com/tarballs/{}/{}'.format(lib, filename)
+	url = f'https://opensource.apple.com/tarballs/{lib}/{filename}'
 	r = requests.get(url)
 	with open(filename, 'wb') as f:
 		f.write(r.content)
@@ -29,14 +29,14 @@ def download(lib: str, filename: str):
 def empty_repo(directory: str):
 	os.makedirs(directory)
 	repo = Repo.init(directory)
-	with open(directory + '/.gitignore', 'w') as f:
+	with open(f'{directory}/.gitignore', 'w') as f:
 		f.write('*.tar.gz\n')
 	repo.index.add(['.gitignore'])
 	repo.index.commit("Initial Commit")
 
 def build_git(library: str, versions: List[str]):
 
-	directory = 'repos/{}'.format(library)
+	directory = f'repos/{library}'
 
 	if not os.path.exists(directory):
 		empty_repo(directory)
@@ -52,13 +52,13 @@ def build_git(library: str, versions: List[str]):
 		with tarfile.open(f, 'r') as tar:
 			tar.extractall('repos/', numeric_owner=True)
 		os.remove(f)
-		untar = 'repos/{}-{}/'.format(library, version)
+		untar = f'repos/{library}-{version}/'
 
 		shutil.copytree(untar, directory, dirs_exist_ok=True, symlinks=False)
 		shutil.rmtree(untar)
 
 		[repo.index.add([f]) for f in os.listdir(directory) if not f.startswith('.')]
-		repo.index.commit("{} - {}".format(library, version))
+		repo.index.commit(f"{library} - {version}")
 
 parser = argparse.ArgumentParser(description='Apple Open Source Libraries')
 parser.add_argument('library', type=str, help='Library to search for')
@@ -66,11 +66,11 @@ parser.add_argument('-download', metavar='d', const=True, nargs='?', help='Downl
 parser.add_argument('-git', metavar='g', const=True, nargs='?', help='Build git history')
 args = parser.parse_args()
 
-regex = re.compile('{}-'.format(args.library))
+regex = re.compile(f'{args.library}-')
 
-request = requests.get('https://opensource.apple.com/tarballs/{}'.format(args.library))
+request = requests.get(f'https://opensource.apple.com/tarballs/{args.library}')
 if request.status_code != 200:
-	print('Failed to find library: {}'.format(args.library))
+	print(f'Failed to find library: {args.library}')
 	sys.exit(1)
 
 soup = BeautifulSoup(request.text, 'html.parser')
@@ -86,7 +86,7 @@ versions = list(versions)
 versions.sort(key=lambda version:[int(v) for v in version.split('.')])
 
 if args.download:
-	f = filename(args.library, versions[len(versions)-1])
+	f = filename(args.library, versions[-1])
 	download(args.library, f)
 
 if args.git:
@@ -94,6 +94,8 @@ if args.git:
 
 info = """Releases: {}
 Oldest: {}
-Newest: {}""".format(len(versions),versions[0], versions[len(versions)-1])
+Newest: {}""".format(
+	len(versions), versions[0], versions[-1]
+)
 print(info)
 
